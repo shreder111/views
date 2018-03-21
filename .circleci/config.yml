@@ -1,0 +1,22 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: streamrail/circle:latest
+    working_directory: ~/go/src/github.com/streamrail/views
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t streamrail/views:$CIRCLE_SHA1 .
+      - run:
+          name: Push Docker Image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag `docker images -q | head -1` streamrail/views:latest
+            fi
+            docker login -u $DOCKER_USER --password=$DOCKER_PASSWORD
+            docker push streamrail/views
